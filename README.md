@@ -37,7 +37,7 @@ In der `wp-config.php`:
 ```php
 define( 'BQ_MOTION_REPO', 'https://github.com/blanq-agency/blanq-motion/' ); // Repository für Updates
 define( 'BQ_MOTION_GITHUB_TOKEN', 'github_pat_…' ); // nur bei privatem Repository
-define( 'BQ_MOTION_AUTO_UPDATE', false );           // automatische Updates abschalten
+define( 'BQ_MOTION_AUTO_UPDATE', false );           // automatische Updates abschalten (Details unten)
 ```
 
 Filter für Sonderfälle (z. B. in einem Code-Snippet):
@@ -70,15 +70,27 @@ BRICKSMOTION
 
 ## Automatische Updates
 
-So läuft es:
+Fester Monatsrhythmus:
 
-1. **Jeden Montag** prüft eine GitHub-Action, ob es neue GSAP- oder Lenis-Versionen gibt.
-2. Falls ja, aktualisiert sie `vendor/`, erhöht die Plugin-Version, lässt die Tests laufen und **öffnet einen Pull Request**.
-3. Ihr prüft kurz auf einer Staging-Seite und **führt den Pull Request zusammen**.
-4. Daraufhin erstellt die zweite Action automatisch ein **Release mit `blanq-motion.zip`**.
-5. Alle Kundenseiten sehen das Update im WordPress-Backend und **installieren es automatisch** (WordPress prüft etwa alle 12 Stunden).
+| Wann | Was passiert |
+|---|---|
+| **Letzter Freitag des Monats** | Eine GitHub-Action prüft, ob es neue GSAP- oder Lenis-Versionen gibt. Falls ja, aktualisiert sie `vendor/`, erhöht die Plugin-Version, lässt die Tests laufen und **öffnet einen Pull Request**. |
+| **Freitag bis Sonntag** | Kurz auf einer Staging-Seite prüfen und den Pull Request **zusammenführen**. Daraufhin entsteht automatisch ein **Release mit `blanq-motion.zip`**. |
+| **Erster Montag des Monats** | Die Kundenseiten **installieren das Update automatisch** (WordPress prüft etwa alle 12 Stunden, Zeitzone der Website). |
 
-Gleiches gilt für eigene Änderungen: Version in `blanq-motion.php` erhöhen (`npm run build -- --bump`), auf `main` pushen, fertig.
+An allen anderen Tagen wird ein verfügbares Update in WordPress nur angezeigt und kann bei Bedarf von Hand eingespielt werden. Wird der Pull Request erst nach dem ersten Montag zusammengeführt, kommt das Update einen Monat später automatisch.
+
+Die Action lässt sich unter *Actions → Bibliotheken aktualisieren → Run workflow* auch jederzeit von Hand starten.
+
+Zeitplan ändern (`wp-config.php`):
+
+```php
+define( 'BQ_MOTION_AUTO_UPDATE', 'first-monday' ); // Standard
+define( 'BQ_MOTION_AUTO_UPDATE', 'always' );       // sofort installieren
+define( 'BQ_MOTION_AUTO_UPDATE', false );          // nur von Hand
+```
+
+Eigene Änderungen: Version erhöhen (`npm run build -- --bump`), auf `main` pushen. Das Release entsteht sofort, installiert wird am nächsten ersten Montag.
 
 ## Entwicklung
 

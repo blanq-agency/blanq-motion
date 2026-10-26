@@ -1,12 +1,13 @@
-# Prüft jede Woche, ob es neue Versionen von GSAP oder Lenis gibt.
+# Prüft am letzten Freitag des Monats, ob es neue Versionen von GSAP oder Lenis gibt.
 # Falls ja: Dateien aktualisieren, Tests laufen lassen und einen Pull Request öffnen.
-# Mit dem Zusammenführen (Merge) des Pull Requests wird automatisch ein Release erstellt.
+# Mit dem Zusammenführen (Merge) des Pull Requests wird automatisch ein Release erstellt,
+# das die Kundenseiten am ersten Montag des Monats installieren.
 name: Bibliotheken aktualisieren
 
 on:
   schedule:
-    - cron: '17 5 * * 1'   # montags 05:17 UTC
-  workflow_dispatch:        # zusätzlich manuell startbar
+    - cron: '17 5 * * 5'   # jeden Freitag 05:17 UTC, der erste Schritt lässt nur den letzten Freitag durch
+  workflow_dispatch:        # manuell startbar, dann ohne Datumsprüfung
 
 permissions:
   contents: write
@@ -16,26 +17,43 @@ jobs:
   update:
     runs-on: ubuntu-latest
     steps:
+      - name: Nur am letzten Freitag des Monats weitermachen
+        id: day
+        run: |
+          if [ "${{ github.event_name }}" = "schedule" ] && [ "$(date -u -d '+7 days' +%m)" = "$(date -u +%m)" ]; then
+            echo "Nicht der letzte Freitag des Monats – nichts zu tun."
+            echo "run=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "run=true" >> "$GITHUB_OUTPUT"
+          fi
+
       - uses: actions/checkout@v4
+        if: steps.day.outputs.run == 'true'
 
       - uses: actions/setup-node@v4
+        if: steps.day.outputs.run == 'true'
         with:
           node-version: 22
 
       - uses: shivammathur/setup-php@v2
+        if: steps.day.outputs.run == 'true'
         with:
           php-version: '8.3'
 
       - name: Neueste GSAP- und Lenis-Versionen holen
+        if: steps.day.outputs.run == 'true'
         run: npm install --save-dev gsap@latest lenis@latest
 
       - name: vendor/ neu bauen (erhöht die Plugin-Version bei Änderungen)
+        if: steps.day.outputs.run == 'true'
         run: npm run build
 
       - name: Erkennung testen
+        if: steps.day.outputs.run == 'true'
         run: npm test
 
       - name: Pull Request öffnen
+        if: steps.day.outputs.run == 'true'
         uses: peter-evans/create-pull-request@v7
         with:
           branch: bibliotheken-aktualisieren
@@ -45,4 +63,4 @@ jobs:
           body: |
             Neue Versionen von GSAP oder Lenis sind verfügbar. Die Dateien in `vendor/` und die Plugin-Version wurden aktualisiert, die Tests sind durchgelaufen.
 
-            Vor dem Zusammenführen kurz auf einer Staging-Seite prüfen. Nach dem Merge entsteht automatisch ein Release, und die Kundenseiten aktualisieren sich.
+            Vor dem Zusammenführen kurz auf einer Staging-Seite prüfen. Bitte bis Montag zusammenführen: Nach dem Merge entsteht automatisch ein Release, und die Kundenseiten installieren es am ersten Montag des Monats.

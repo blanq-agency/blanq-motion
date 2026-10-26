@@ -2,7 +2,7 @@
 /**
  * Plugin Name:       blanq Motion
  * Description:       Lädt GSAP und Lenis lokal (ohne CDN) und nur auf Seiten, die sie brauchen – für Bricksmotion-Komponenten und eigenen GSAP-Code.
- * Version:           1.0.1
+ * Version:           1.0.2
  * Requires at least: 6.4
  * Requires PHP:      7.4
  * Author:            blanq GmbH
@@ -14,7 +14,7 @@
 
 defined( 'ABSPATH' ) || exit;
 
-define( 'BQ_MOTION_VERSION', '1.0.1' );
+define( 'BQ_MOTION_VERSION', '1.0.2' );
 define( 'BQ_MOTION_FILE', __FILE__ );
 
 /*
@@ -22,11 +22,14 @@ define( 'BQ_MOTION_FILE', __FILE__ );
  *
  *   define( 'BQ_MOTION_REPO', 'https://github.com/blanq-agency/blanq-motion/' );
  *   define( 'BQ_MOTION_GITHUB_TOKEN', 'github_pat_…' ); // nur bei privatem Repository
- *   define( 'BQ_MOTION_AUTO_UPDATE', false );           // automatische Updates abschalten
+ *   define( 'BQ_MOTION_AUTO_UPDATE', 'first-monday' );  // Standard: nur am ersten Montag des Monats
+ *   define( 'BQ_MOTION_AUTO_UPDATE', 'always' );        // sofort, sobald ein Update da ist
+ *   define( 'BQ_MOTION_AUTO_UPDATE', false );           // nie automatisch, nur von Hand
  */
 defined( 'BQ_MOTION_REPO' ) || define( 'BQ_MOTION_REPO', 'https://github.com/blanq-agency/blanq-motion/' );
-defined( 'BQ_MOTION_AUTO_UPDATE' ) || define( 'BQ_MOTION_AUTO_UPDATE', true );
+defined( 'BQ_MOTION_AUTO_UPDATE' ) || define( 'BQ_MOTION_AUTO_UPDATE', 'first-monday' );
 
+require_once __DIR__ . '/includes/schedule.php';
 require_once __DIR__ . '/includes/class-detector.php';
 require_once __DIR__ . '/includes/class-loader.php';
 
@@ -62,15 +65,32 @@ if ( is_readable( $bq_motion_puc ) ) {
 	}
 }
 
-// Dieses Plugin automatisch aktualisieren (abschaltbar über BQ_MOTION_AUTO_UPDATE).
+/*
+ * Automatische Installation nur am ersten Montag des Monats (Zeitzone der Website).
+ * WordPress prüft etwa alle 12 Stunden; an den übrigen Tagen wird das Update nur
+ * angezeigt und kann von Hand eingespielt werden.
+ */
 add_filter(
 	'auto_update_plugin',
 	function ( $update, $item ) {
-		if ( isset( $item->plugin ) && plugin_basename( __FILE__ ) === $item->plugin ) {
-			return (bool) BQ_MOTION_AUTO_UPDATE;
+		if ( ! isset( $item->plugin ) || plugin_basename( __FILE__ ) !== $item->plugin ) {
+			return $update;
 		}
-		return $update;
+		return bq_motion_auto_update_allowed( BQ_MOTION_AUTO_UPDATE, current_datetime() );
 	},
 	10,
 	2
+);
+
+// In der Plugin-Liste anzeigen, wann automatisch installiert wird.
+add_filter(
+	'plugin_auto_update_debug_string',
+	function ( $text, $plugin, $enabled ) {
+		if ( plugin_basename( __FILE__ ) === $plugin && 'first-monday' === BQ_MOTION_AUTO_UPDATE ) {
+			return 'Automatisch am ersten Montag des Monats';
+		}
+		return $text;
+	},
+	10,
+	3
 );

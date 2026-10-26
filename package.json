@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "build": "node tools/build.mjs",
-    "test": "php tests/detector-test.php",
+    "test": "php tests/detector-test.php && php tests/schedule-test.php",
     "package": "sh tools/package.sh"
   },
   "devDependencies": {
