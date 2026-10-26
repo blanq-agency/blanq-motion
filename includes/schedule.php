@@ -10,8 +10,17 @@ function bq_motion_is_first_monday( DateTimeInterface $date ): bool {
 	return '1' === $date->format( 'N' ) && (int) $date->format( 'j' ) <= 7;
 }
 
+/** Heute, falls heute erster Montag ist, sonst der erste Montag des nächsten Monats. */
+function bq_motion_next_first_monday( DateTimeImmutable $now ): DateTimeImmutable {
+	if ( bq_motion_is_first_monday( $now ) ) {
+		return $now;
+	}
+	$this_month = $now->modify( 'first monday of this month' );
+	return $this_month > $now ? $this_month : $now->modify( 'first monday of next month' );
+}
+
 /**
- * @param mixed             $mode 'first-monday' (Standard), 'always' oder false
+ * @param mixed            $mode 'first-monday' (Standard), 'always' oder false
  * @param DateTimeInterface $now  aktuelle Zeit in der Zeitzone der Website
  */
 function bq_motion_auto_update_allowed( $mode, DateTimeInterface $now ): bool {

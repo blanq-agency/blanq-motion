@@ -2,7 +2,7 @@
 /**
  * Plugin Name:       blanq Motion
  * Description:       Lädt GSAP und Lenis lokal (ohne CDN) und nur auf Seiten, die sie brauchen – für Bricksmotion-Komponenten und eigenen GSAP-Code.
- * Version:           1.0.2
+ * Version:           1.0.3
  * Requires at least: 6.4
  * Requires PHP:      7.4
  * Author:            blanq GmbH
@@ -14,7 +14,7 @@
 
 defined( 'ABSPATH' ) || exit;
 
-define( 'BQ_MOTION_VERSION', '1.0.2' );
+define( 'BQ_MOTION_VERSION', '1.0.3' );
 define( 'BQ_MOTION_FILE', __FILE__ );
 
 /*
@@ -82,7 +82,28 @@ add_filter(
 	2
 );
 
-// In der Plugin-Liste anzeigen, wann automatisch installiert wird.
+// In der Plugin-Liste den nächsten Installationstermin anzeigen.
+add_filter(
+	'plugin_row_meta',
+	function ( $meta, $file ) {
+		if ( plugin_basename( __FILE__ ) !== $file ) {
+			return $meta;
+		}
+		if ( 'first-monday' === BQ_MOTION_AUTO_UPDATE ) {
+			$next   = bq_motion_next_first_monday( current_datetime() );
+			$meta[] = esc_html( 'Automatische Installation am ersten Montag des Monats, nächster Termin: ' . $next->format( 'd.m.Y' ) );
+		} elseif ( 'always' === BQ_MOTION_AUTO_UPDATE ) {
+			$meta[] = esc_html( 'Automatische Installation sofort' );
+		} else {
+			$meta[] = esc_html( 'Updates nur von Hand' );
+		}
+		return $meta;
+	},
+	10,
+	2
+);
+
+// Website-Zustand: anzeigen, wann automatisch installiert wird.
 add_filter(
 	'plugin_auto_update_debug_string',
 	function ( $text, $plugin, $enabled ) {
