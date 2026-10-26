@@ -1,0 +1,48 @@
+# Prüft jede Woche, ob es neue Versionen von GSAP oder Lenis gibt.
+# Falls ja: Dateien aktualisieren, Tests laufen lassen und einen Pull Request öffnen.
+# Mit dem Zusammenführen (Merge) des Pull Requests wird automatisch ein Release erstellt.
+name: Bibliotheken aktualisieren
+
+on:
+  schedule:
+    - cron: '17 5 * * 1'   # montags 05:17 UTC
+  workflow_dispatch:        # zusätzlich manuell startbar
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.3'
+
+      - name: Neueste GSAP- und Lenis-Versionen holen
+        run: npm install --save-dev gsap@latest lenis@latest
+
+      - name: vendor/ neu bauen (erhöht die Plugin-Version bei Änderungen)
+        run: npm run build
+
+      - name: Erkennung testen
+        run: npm test
+
+      - name: Pull Request öffnen
+        uses: peter-evans/create-pull-request@v7
+        with:
+          branch: bibliotheken-aktualisieren
+          delete-branch: true
+          commit-message: 'GSAP/Lenis aktualisiert'
+          title: 'GSAP/Lenis aktualisiert'
+          body: |
+            Neue Versionen von GSAP oder Lenis sind verfügbar. Die Dateien in `vendor/` und die Plugin-Version wurden aktualisiert, die Tests sind durchgelaufen.
+
+            Vor dem Zusammenführen kurz auf einer Staging-Seite prüfen. Nach dem Merge entsteht automatisch ein Release, und die Kundenseiten aktualisieren sich.

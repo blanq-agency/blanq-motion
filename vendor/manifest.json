@@ -1,0 +1,189 @@
+{
+  "gsap": "3.15.0",
+  "lenis": "1.3.27",
+  "libs": {
+    "CSSRulePlugin": {
+      "file": "gsap/CSSRulePlugin.min.js",
+      "deps": [
+        "gsap"
+      ],
+      "version": "3.15.0"
+    },
+    "CustomBounce": {
+      "file": "gsap/CustomBounce.min.js",
+      "deps": [
+        "gsap",
+        "CustomEase"
+      ],
+      "version": "3.15.0"
+    },
+    "CustomEase": {
+      "file": "gsap/CustomEase.min.js",
+      "deps": [
+        "gsap"
+      ],
+      "version": "3.15.0"
+    },
+    "CustomWiggle": {
+      "file": "gsap/CustomWiggle.min.js",
+      "deps": [
+        "gsap",
+        "CustomEase"
+      ],
+      "version": "3.15.0"
+    },
+    "Draggable": {
+      "file": "gsap/Draggable.min.js",
+      "deps": [
+        "gsap"
+      ],
+      "version": "3.15.0"
+    },
+    "DrawSVGPlugin": {
+      "file": "gsap/DrawSVGPlugin.min.js",
+      "deps": [
+        "gsap"
+      ],
+      "version": "3.15.0"
+    },
+    "EasePack": {
+      "file": "gsap/EasePack.min.js",
+      "deps": [
+        "gsap"
+      ],
+      "version": "3.15.0"
+    },
+    "EaselPlugin": {
+      "file": "gsap/EaselPlugin.min.js",
+      "deps": [
+        "gsap"
+      ],
+      "version": "3.15.0"
+    },
+    "Flip": {
+      "file": "gsap/Flip.min.js",
+      "deps": [
+        "gsap"
+      ],
+      "version": "3.15.0"
+    },
+    "GSDevTools": {
+      "file": "gsap/GSDevTools.min.js",
+      "deps": [
+        "gsap"
+      ],
+      "version": "3.15.0"
+    },
+    "InertiaPlugin": {
+      "file": "gsap/InertiaPlugin.min.js",
+      "deps": [
+        "gsap"
+      ],
+      "version": "3.15.0"
+    },
+    "MorphSVGPlugin": {
+      "file": "gsap/MorphSVGPlugin.min.js",
+      "deps": [
+        "gsap"
+      ],
+      "version": "3.15.0"
+    },
+    "MotionPathHelper": {
+      "file": "gsap/MotionPathHelper.min.js",
+      "deps": [
+        "gsap",
+        "MotionPathPlugin"
+      ],
+      "version": "3.15.0"
+    },
+    "MotionPathPlugin": {
+      "file": "gsap/MotionPathPlugin.min.js",
+      "deps": [
+        "gsap"
+      ],
+      "version": "3.15.0"
+    },
+    "Observer": {
+      "file": "gsap/Observer.min.js",
+      "deps": [
+        "gsap"
+      ],
+      "version": "3.15.0"
+    },
+    "Physics2DPlugin": {
+      "file": "gsap/Physics2DPlugin.min.js",
+      "deps": [
+        "gsap"
+      ],
+      "version": "3.15.0"
+    },
+    "PhysicsPropsPlugin": {
+      "file": "gsap/PhysicsPropsPlugin.min.js",
+      "deps": [
+        "gsap"
+      ],
+      "version": "3.15.0"
+    },
+    "PixiPlugin": {
+      "file": "gsap/PixiPlugin.min.js",
+      "deps": [
+        "gsap"
+      ],
+      "version": "3.15.0"
+    },
+    "ScrambleTextPlugin": {
+      "file": "gsap/ScrambleTextPlugin.min.js",
+      "deps": [
+        "gsap"
+      ],
+      "version": "3.15.0"
+    },
+    "ScrollSmoother": {
+      "file": "gsap/ScrollSmoother.min.js",
+      "deps": [
+        "gsap",
+        "ScrollTrigger"
+      ],
+      "version": "3.15.0"
+    },
+    "ScrollToPlugin": {
+      "file": "gsap/ScrollToPlugin.min.js",
+      "deps": [
+        "gsap"
+      ],
+      "version": "3.15.0"
+    },
+    "ScrollTrigger": {
+      "file": "gsap/ScrollTrigger.min.js",
+      "deps": [
+        "gsap"
+      ],
+      "version": "3.15.0"
+    },
+    "SplitText": {
+      "file": "gsap/SplitText.min.js",
+      "deps": [
+        "gsap"
+      ],
+      "version": "3.15.0"
+    },
+    "TextPlugin": {
+      "file": "gsap/TextPlugin.min.js",
+      "deps": [
+        "gsap"
+      ],
+      "version": "3.15.0"
+    },
+    "gsap": {
+      "file": "gsap/gsap.min.js",
+      "deps": [],
+      "version": "3.15.0"
+    },
+    "Lenis": {
+      "file": "lenis/lenis.min.js",
+      "css": "lenis/lenis.css",
+      "deps": [],
+      "version": "1.3.27"
+    }
+  }
+}

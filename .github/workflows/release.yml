@@ -1,0 +1,51 @@
+# Erstellt bei jeder neuen Plugin-Version auf main ein GitHub-Release mit blanq-motion.zip.
+# Die WordPress-Seiten holen sich Updates aus diesen Releases.
+name: Release
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.3'
+
+      - name: Version auslesen
+        id: version
+        run: |
+          VERSION=$(grep -m1 -E '^\s*\*\s*Version:' blanq-motion.php | sed -E 's/.*Version:\s*//')
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+          if git rev-parse "v$VERSION" >/dev/null 2>&1; then
+            echo "exists=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "exists=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Tests
+        if: steps.version.outputs.exists == 'false'
+        run: php tests/detector-test.php
+
+      - name: Zip bauen
+        if: steps.version.outputs.exists == 'false'
+        run: sh tools/package.sh
+
+      - name: Release veröffentlichen
+        if: steps.version.outputs.exists == 'false'
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: v${{ steps.version.outputs.version }}
+          name: blanq Motion ${{ steps.version.outputs.version }}
+          files: dist/blanq-motion.zip
+          generate_release_notes: true
