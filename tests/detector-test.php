@@ -76,6 +76,28 @@ check(
 	$d->detect( $page( '<script src="/app.js?gsap.to"></script><p>ScrollTrigger im Fließtext</p>' ) )['libs']
 );
 
+// Fehlalarme aus dem ersten Staging-Test
+check(
+	'WP-Daten (z. B. ACSS-Option "Flip") werden ignoriert',
+	array(),
+	$d->detect( $page( '<script id="acss-dashboard-js-extra">var acss = {"id":"option-flip","title":"Flip"};</script>' ) )['libs']
+);
+check(
+	'Plugin-Namen in Kommentaren und Strings zählen nicht',
+	array( 'gsap', 'ScrollTrigger', 'SplitText', 'Lenis' ),
+	$d->detect(
+		$page(
+			"<script>/* loads any plugin by name (SplitText, Flip,\n Draggable, InertiaPlugin, DrawSVGPlugin, MorphSVGPlugin...). */\n" .
+			"var hint = 'Flip Draggable'; // MorphSVGPlugin\nBM.ready(function(){ BM.load(['SplitText']); gsap.registerPlugin(ScrollTrigger); });</script>"
+		)
+	)['libs']
+);
+check(
+	'Lenis-Code wird erkannt',
+	array( 'Lenis' ),
+	$d->detect( $page( '<script>const lenis = new Lenis({ anchors: true });</script>' ) )['libs']
+);
+
 // Bereits von anderer Stelle geladen (z. B. Bricksforge)
 $html = $page( '<script src="/wp-content/plugins/bricksforge/assets/vendor/gsap.min.js?ver=3"></script>' . $own );
 check( 'Bereits geladenes GSAP wird erkannt', array( 'gsap' ), $d->already_loaded( $html, array( 'gsap', 'Flip', 'ScrollTrigger' ) ) );

@@ -54,18 +54,26 @@ class Detector {
 			}
 		}
 
-		// 2. Eigener GSAP-Code (z. B. in Bricks-Code-Elementen)
-		if ( preg_match( '/\bgsap\s*\./', $scripts ) ) {
+		// 2. Eigener GSAP-Code (z. B. in Bricks-Code-Elementen).
+		//    Nur echter Code zählt: Kommentare und Textstrings werden vorher entfernt.
+		$code = $this->strip_comments_and_strings( $scripts );
+		if ( preg_match( '/\bgsap\s*\./', $code ) ) {
 			$reasons[] = 'GSAP-Code';
 			$libs[]    = 'gsap';
+			foreach ( array_keys( $this->manifest['libs'] ) as $name ) {
+				if ( 'gsap' !== $name && preg_match( '/(?<![\w$.])' . preg_quote( $name, '/' ) . '\b/', $code ) ) {
+					$libs[] = $name;
+				}
+			}
+		} elseif ( preg_match( '/(?<![\w$.])(ScrollSmoother|ScrollTrigger|SplitText|Flip|Draggable|Observer)\s*\.\s*(create|from|to|fit|getState|batch|refresh|get)\s*\(/', $code, $hit ) ) {
+			// Plugin wird direkt benutzt, ohne gsap.* im selben Code
+			$reasons[] = 'GSAP-Code';
+			$libs[]    = 'gsap';
+			$libs[]    = $hit[1];
 		}
-		foreach ( array_keys( $this->manifest['libs'] ) as $name ) {
-			if ( 'gsap' === $name ) {
-				continue;
-			}
-			if ( preg_match( '/\b' . preg_quote( $name, '/' ) . '\b/', $scripts ) ) {
-				$libs[] = $name;
-			}
+		if ( preg_match( '/\bnew\s+Lenis\s*\(/', $code ) ) {
+			$reasons[] = 'Lenis-Code';
+			$libs[]    = 'Lenis';
 		}
 
 		// 3. Ausdrücklich angefordert: data-bq-gsap="Flip Draggable" an einem Element
@@ -141,7 +149,47 @@ class Detector {
 		return $ordered;
 	}
 
-	/** Inhalt aller Inline-Skripte (ohne src, ohne JSON und Templates). */
+	/**
+	 * Entfernt Kommentare und den Inhalt von Strings aus JavaScript, damit
+	 * nur Bezeichner im echten Code gezählt werden (vereinfachter Scanner).
+	 */
+	public function strip_comments_and_strings( string $js ): string {
+		$out = '';
+		$len = strlen( $js );
+		for ( $i = 0; $i < $len; $i++ ) {
+			$c    = $js[ $i ];
+			$next = $i + 1 < $len ? $js[ $i + 1 ] : '';
+			if ( '/' === $c && '/' === $next ) {          // Zeilenkommentar
+				$end = strpos( $js, "\n", $i );
+				$i   = false === $end ? $len : $end - 1;
+				continue;
+			}
+			if ( '/' === $c && '*' === $next ) {          // Blockkommentar
+				$end = strpos( $js, '*/', $i + 2 );
+				$i   = false === $end ? $len : $end + 1;
+				$out .= ' ';
+				continue;
+			}
+			if ( '"' === $c || "'" === $c || '`' === $c ) { // String: Inhalt verwerfen
+				for ( $j = $i + 1; $j < $len; $j++ ) {
+					if ( '\\' === $js[ $j ] ) {
+						$j++;
+						continue;
+					}
+					if ( $js[ $j ] === $c || ( '`' !== $c && "\n" === $js[ $j ] ) ) {
+						break;
+					}
+				}
+				$out .= $c . $c;
+				$i    = $j;
+				continue;
+			}
+			$out .= $c;
+		}
+		return $out;
+	}
+
+	/** Inhalt aller Inline-Skripte (ohne src, ohne JSON, Templates und reine WP-Daten). */
 	private function inline_scripts( string $html ): string {
 		if ( ! preg_match_all( '/<script\b([^>]*)>(.*?)<\/script>/is', $html, $m, PREG_SET_ORDER ) ) {
 			return '';
@@ -153,6 +201,10 @@ class Detector {
 				continue;
 			}
 			if ( preg_match( '/\btype=["\']?(application\/(ld\+)?json|text\/template|text\/html|text\/x-template|importmap|speculationrules)/i', $attrs ) ) {
+				continue;
+			}
+			// wp_localize_script-Daten anderer Plugins (z. B. ACSS-Dashboard) sind kein Code
+			if ( preg_match( '/\bid=["\'][^"\']*-js-extra["\']/i', $attrs ) ) {
 				continue;
 			}
 			$code .= "\n" . $script[2];
