@@ -26,6 +26,23 @@ class Loader {
 
 	public function register(): void {
 		add_action( 'template_redirect', array( $this, 'start' ), PHP_INT_MAX );
+		add_action( 'wp_enqueue_scripts', array( $this, 'builder_runtime' ) );
+	}
+
+	/**
+	 * Im Bricks-Editor läuft der Loader nicht. Damit Komponenten ohne eigenen
+	 * Bricksmotion-Loader dort keinen Fehler werfen, kommt nur die Runtime
+	 * (ohne GSAP) dazu: Die Komponenten bleiben im Editor statisch.
+	 */
+	public function builder_runtime(): void {
+		if ( ! isset( $_GET['bricks'] ) && ! ( function_exists( 'bricks_is_builder' ) && bricks_is_builder() ) ) { // phpcs:ignore WordPress.Security.NonceVerification
+			return;
+		}
+		wp_enqueue_script( 'bq-motion-runtime', $this->runtime_url(), array(), BQ_MOTION_VERSION, false );
+	}
+
+	private function runtime_url(): string {
+		return plugin_dir_url( BQ_MOTION_FILE ) . 'assets/bm-runtime.js';
 	}
 
 	public function start(): void {
@@ -61,11 +78,14 @@ class Loader {
 		$libs   = apply_filters( 'bq_motion_libraries', $result['libs'], $html );
 		$libs   = array_values( array_diff( $libs, $this->detector->already_loaded( $html, $libs ) ) );
 
-		if ( empty( $libs ) ) {
+		// Bricksmotion braucht die Runtime auch, wenn GSAP schon von anderer Stelle kommt.
+		$runtime = in_array( 'Bricksmotion', $result['reasons'], true );
+
+		if ( empty( $libs ) && ! $runtime ) {
 			return $html;
 		}
 
-		$tags = $this->tags( $libs, $result['reasons'] );
+		$tags = $this->tags( $libs, $result['reasons'], $runtime );
 		$pos = stripos( $html, '</head>' );
 		return substr( $html, 0, $pos ) . $tags . substr( $html, $pos );
 	}
@@ -79,7 +99,7 @@ class Loader {
 		return true;
 	}
 
-	private function tags( array $libs, array $reasons ): string {
+	private function tags( array $libs, array $reasons, bool $runtime = false ): string {
 		$base  = plugin_dir_url( BQ_MOTION_FILE ) . 'vendor/';
 		$defer = (bool) apply_filters( 'bq_motion_defer', false );
 		$out   = "\n";
@@ -107,6 +127,15 @@ class Loader {
 				esc_attr( strtolower( $name ) ),
 				esc_url( $base . $lib['file'] . '?ver=' . $lib['version'] ),
 				$defer ? ' defer' : ''
+			);
+		}
+
+		// Nach den Bibliotheken und nie mit defer: Die Komponenten rufen BM.ready
+		// direkt im Inline-Skript auf, BM muss dann schon existieren.
+		if ( $runtime ) {
+			$out .= sprintf(
+				"<script id=\"bq-motion-runtime-js\" src=\"%s\"></script>\n",
+				esc_url( $this->runtime_url() . '?ver=' . BQ_MOTION_VERSION )
 			);
 		}
 		return $out;

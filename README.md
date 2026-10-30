@@ -23,6 +23,16 @@ Bricksmotion nutzt das vorhandene GSAP und lädt dann nichts vom CDN nach. **Nic
 
 **Nicht aktiv** im Bricks-Editor, im Admin, bei REST/AJAX, Feeds und Embeds.
 
+## Bricksmotion-Komponenten ohne eigenen Loader (ab 1.1.0)
+
+Jede Bricksmotion-Komponente bringt einen rund 9 KB großen „BRICKSMOTION LOADER“ mit, der GSAP und Lenis vom CDN nachlädt. Mit blanq Motion ist er überflüssig: Das Plugin bindet auf Seiten mit Bricksmotion zusätzlich `assets/bm-runtime.js` ein. Sie stellt `BM.ready`, `BM.load`, `BM.unlazy` und `BM.reducedMotion` bereit, registriert die GSAP-Plugins und startet Lenis.
+
+So wird eine Komponente für die blanq-Bibliothek verschlankt: im Code-Element alles **oberhalb** des Kommentars `BRICKSMOTION: <NAME> (…)` löschen. Der Teil mit `BM.ready(…)` bleibt unverändert.
+
+- Komponenten, die den alten Loader noch enthalten, laufen weiter: Er erkennt die Runtime (Version 3.2) und überschreibt sie nicht.
+- Im Bricks-Editor lädt das Plugin nur die Runtime ohne GSAP. Verschlankte Komponenten bleiben dort statisch und werfen keinen Fehler. Animationen im Frontend prüfen.
+- Die Runtime wird nie mit `defer` geladen, auch wenn `bq_motion_defer` aktiv ist.
+
 ## Prüfen, ob es läuft
 
 1. Als Admin eingeloggt eine Seite öffnen, Quelltext ansehen. Im `<head>` steht z. B.
